@@ -34,10 +34,51 @@ public class Graph {
 		Scanner fileScanner  = new Scanner(new File(fileName));
 		while(fileScanner.hasNextLine()){
 			String line = fileScanner.nextLine();
-			System.out.println(line);	
-			String array[] =line.split("[:,]+");
-			for(int i=0;i<array.length;i++){
-				System.out.println(array[i]);
+			String tempArray[] =line.split("[:,]+");
+			//check if the parent already exists in the list if not create one.
+			int parentIndex = vertexForName(tempArray[0]);
+			Vertex parentVertex;
+			if(parentIndex!=-1){
+				//this vertex already exists.
+				parentVertex = vertices.get(parentIndex);
+			}else{
+				parentVertex = new Vertex(tempArray[0].trim(), null);
+				vertices.add(parentVertex);
+				parentIndex = vertices.indexOf(parentVertex);
+			}
+		
+			for(int i=1;i<tempArray.length;i++){
+				int indexOfVertex = vertexForName(tempArray[i]);
+				
+				if(indexOfVertex!=-1){
+					//vertex exists in the array, link the reference
+					
+				    //iterate through the adjList of the vertex and add the neighbor at the end.
+					Neighbour temp = parentVertex.adjList;
+					if(temp==null){
+						parentVertex.adjList = new Neighbour(indexOfVertex, null);
+					}else{
+						while(temp.nextNeighbour!=null){
+							temp = temp.nextNeighbour;
+						}
+						temp.nextNeighbour = new Neighbour(indexOfVertex, null);
+					}
+				}else{
+					//create a new vertex add it to the array list and link the reference.
+					Vertex childVertex = new Vertex(tempArray[i].trim(), null);
+					vertices.add(childVertex);
+					
+					int indexOfChild = vertices.indexOf(childVertex);
+					Neighbour temp = parentVertex.adjList;
+					if(temp==null){
+						parentVertex.adjList = new Neighbour(indexOfChild, null);
+					}else{
+						while(temp.nextNeighbour!=null){
+							temp = temp.nextNeighbour;
+						}
+						temp.nextNeighbour= new Neighbour(indexOfChild, null);
+					}
+				}
 			}
 		}
 		
@@ -48,7 +89,7 @@ public class Graph {
 	public int vertexForName(String name){
 		
 		for(int i=0;i<vertices.size();i++){
-			if(vertices.get(i).name.equalsIgnoreCase(name)){
+			if(vertices.get(i).name.equalsIgnoreCase(name.trim())){
 				return i;
 			}
 		}
@@ -56,7 +97,14 @@ public class Graph {
 	}
 	
 	public void printGraph(){
-	
+		for(int i=0;i<vertices.size();i++){
+			System.out.print(vertices.get(i).name);
+			for(Neighbour nbr = vertices.get(i).adjList; nbr!=null ; nbr=nbr.nextNeighbour){
+				System.out.print("--> "+ vertices.get(nbr.vertext).name);
+			}
+			System.out.println("\n");
+			
+		}
 	}
 	
 	public static void main(String[] args) throws IOException{
