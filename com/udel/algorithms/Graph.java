@@ -3,116 +3,272 @@ package com.udel.algorithms;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-
-
-class Neighbour{
+class Neighbour {
 	public int vertext;
 	public Neighbour nextNeighbour;
-	public Neighbour(int vertext,Neighbour nextNeighbour){
+	public Neighbour(int vertext, Neighbour nextNeighbour) {
 		this.vertext = vertext;
 		this.nextNeighbour = nextNeighbour;
 	}
 }
-class Vertex{
+
+class Vertex {
 	public String name;
 	public Neighbour adjList;
-	public Vertex(String name, Neighbour adjList){
+	public Vertex(String name, Neighbour adjList) {
 		this.name = name;
 		this.adjList = adjList;
 	}
 }
 
-public class Graph {
+class Graph {
 	public Boolean directed;
 	public ArrayList<Vertex> vertices =  new ArrayList<Vertex>();
-	private int count=0;
 	
-	public Graph(String fileName) throws FileNotFoundException{
+	/**
+	 * Default constructor. Reads from stdin.
+	 * @throws IOException
+	 */
+	public Graph() throws IOException {
+		this.buildGraphByStdin();
+	}
+	
+	/**
+	 * Alternative constructor. Reads from a file.
+	 * @param fileName
+	 * @throws FileNotFoundException
+	 */
+	public Graph(String fileName) throws FileNotFoundException {
+		this.buildGraphByFile(fileName);
+	}
+	
+	/**
+	 * Builds the graph using input from stdin.
+	 * @throws IOException
+	 */
+	private void buildGraphByStdin() throws IOException {
+		InputStreamReader in= new InputStreamReader(System.in);
+        BufferedReader input = new BufferedReader(in);
+        String line;
+		while ((line = input.readLine()) != null) {
+			this.parseLine(line);
+		}
+	}
+	
+	/**
+	 * Builds the graph using the input from a file.
+	 * @param fileName
+	 * @throws FileNotFoundException
+	 */
+	private void buildGraphByFile(String fileName) throws FileNotFoundException {
 		Scanner fileScanner  = new Scanner(new File(fileName));
-		while(fileScanner.hasNextLine()){
+		while (fileScanner.hasNextLine()) {
 			String line = fileScanner.nextLine();
-			String tempArray[] =line.split("[:,]+");
-			//check if the parent already exists in the list if not create one.
-			int parentIndex = vertexForName(tempArray[0]);
-			Vertex parentVertex;
-			if(parentIndex!=-1){
-				//this vertex already exists.
-				parentVertex = vertices.get(parentIndex);
-			}else{
-				parentVertex = new Vertex(tempArray[0].trim(), null);
-				vertices.add(parentVertex);
-				parentIndex = vertices.indexOf(parentVertex);
-			}
+			this.parseLine(line);
+		}
+		fileScanner.close();
+	}
+	
+	/**
+	 * Parses a line and add the elements to the graph.
+	 * @param line
+	 */
+	private void parseLine(String line) {
+		String tempArray[] = line.split("[:,]+");
 		
-			for(int i=1;i<tempArray.length;i++){
-				int indexOfVertex = vertexForName(tempArray[i]);
+		// check if the parent already exists in the list if not create one
+		int parentIndex = findVertexIndexByName(tempArray[0]);
+		Vertex parentVertex;
+		if (parentIndex!=-1) {
+			// this vertex already exists
+			parentVertex = vertices.get(parentIndex);
+		} else {
+			parentVertex = new Vertex(tempArray[0].trim(), null);
+			vertices.add(parentVertex);
+			parentIndex = vertices.indexOf(parentVertex);
+		}
+	
+		for (int i = 1; i < tempArray.length; i++) {
+			int indexOfVertex = findVertexIndexByName(tempArray[i]);
+			
+			if (indexOfVertex != -1) {
+				// vertex exists in the array => link the reference
+			    // iterate through the adjList of the vertex and add the neighbor at the end
+				Neighbour temp = parentVertex.adjList;
+				if (temp == null) {
+					parentVertex.adjList = new Neighbour(indexOfVertex, null);
+				} else {
+					while (temp.nextNeighbour != null) {
+						temp = temp.nextNeighbour;
+					}
+					temp.nextNeighbour = new Neighbour(indexOfVertex, null);
+				}
+			} else {
+				// create a new vertex, add it to the array list and link the reference
+				Vertex childVertex = new Vertex(tempArray[i].trim(), null);
+				vertices.add(childVertex);
 				
-				if(indexOfVertex!=-1){
-					//vertex exists in the array, link the reference
-					
-				    //iterate through the adjList of the vertex and add the neighbor at the end.
-					Neighbour temp = parentVertex.adjList;
-					if(temp==null){
-						parentVertex.adjList = new Neighbour(indexOfVertex, null);
-					}else{
-						while(temp.nextNeighbour!=null){
-							temp = temp.nextNeighbour;
-						}
-						temp.nextNeighbour = new Neighbour(indexOfVertex, null);
+				int indexOfChild = vertices.indexOf(childVertex);
+				Neighbour temp = parentVertex.adjList;
+				if (temp == null) {
+					parentVertex.adjList = new Neighbour(indexOfChild, null);
+				} else {
+					while (temp.nextNeighbour != null) {
+						temp = temp.nextNeighbour;
 					}
-				}else{
-					//create a new vertex add it to the array list and link the reference.
-					Vertex childVertex = new Vertex(tempArray[i].trim(), null);
-					vertices.add(childVertex);
-					
-					int indexOfChild = vertices.indexOf(childVertex);
-					Neighbour temp = parentVertex.adjList;
-					if(temp==null){
-						parentVertex.adjList = new Neighbour(indexOfChild, null);
-					}else{
-						while(temp.nextNeighbour!=null){
-							temp = temp.nextNeighbour;
-						}
-						temp.nextNeighbour= new Neighbour(indexOfChild, null);
-					}
+					temp.nextNeighbour = new Neighbour(indexOfChild, null);
 				}
 			}
 		}
-		
-		fileScanner.close();
-		
 	}
 	
-	public int vertexForName(String name){
-		
-		for(int i=0;i<vertices.size();i++){
-			if(vertices.get(i).name.equalsIgnoreCase(name.trim())){
+	/**
+	 * Search for a vertex by name.
+	 * @param name
+	 * @return int The vertex's index or -1 if not found
+	 */
+	public int findVertexIndexByName(String name) {
+		for (int i = 0; i < vertices.size(); i++) {
+			if (vertices.get(i).name.equalsIgnoreCase(name.trim())) {
 				return i;
 			}
 		}
 		return -1;
 	}
 	
-	public void printGraph(){
-		for(int i=0;i<vertices.size();i++){
+	/**
+	 * Prints subspecies of a species of certain order.
+	 * @param number
+	 * @param species
+	 * @param order
+	 */
+	public void cite(int number, String species, int order) {
+		int index = this.findVertexIndexByName(species);
+		if (index == -1) {
+			System.out.print("Species not found.");
+			return;
+		}
+		Vertex v = vertices.get(index);
+		this.cite(v, number, order-1);
+	}
+	
+	/**
+	 * Prints all subspecies of a species of certain order.
+	 * @param species
+	 * @param order
+	 */
+	public void citeAll(String species, int order) {
+		int index = this.findVertexIndexByName(species);
+		if (index == -1) {
+			System.out.print("Species not found.");
+			return;
+		}
+		Vertex v = vertices.get(index);
+		this.cite(v, -1, order-1);
+	}
+	
+	/**
+	 * Recursive method for citing.
+	 * @param v
+	 * @param number
+	 * @param order
+	 * @return int Remaining number of subspecies to print.
+	 */
+	private int cite(Vertex v, int number, int order) {
+		if (number == 0) {
+			return number;
+		}
+		if (order <= 0) {
+			// Reached provided order => print
+			Neighbour nbr = v.adjList;
+			while (number != 0 && nbr != null) {
+				System.out.print(vertices.get(nbr.vertext).name + ", ");
+				nbr = nbr.nextNeighbour;
+				number--;
+			}
+		} else {
+			// Did not reach provided order => keep going
+			for (Neighbour nbr = v.adjList; nbr != null; nbr = nbr.nextNeighbour) {
+				number = cite(vertices.get(nbr.vertext), number, order-1);
+			}
+		}
+		return number;
+	}
+	
+	/**
+	 * Prints the most diverse species (the one that has more subspecies).
+	 */
+	public void mostDiverse() {
+		int max = -1;
+		Vertex v = null;
+		for (int i = 0; i < vertices.size(); i++) {
+			int count = 0;
+			for (Neighbour nbr = vertices.get(i).adjList; nbr != null; nbr = nbr.nextNeighbour) {
+				count++;
+			}
+			if (count > max) {
+				max = count;
+				v = vertices.get(i);
+			}
+		}
+		System.out.println("Most diverse species: " + v.name + " with " + max + " subspecies.");
+	}
+	
+	/**
+	 * Finds the lowest common ancestor of 2 species starting from a certain species.
+	 * @param species1 Starting point
+	 * @param species2
+	 * @param species3
+	 */
+	public void lowestCommonAncestor(String species1, String species2, String species3) {
+		int v1i = this.findVertexIndexByName(species1);
+		int v2i = this.findVertexIndexByName(species2);
+		int v3i = this.findVertexIndexByName(species3);
+		if (v1i < 0 || v2i < 0 || v3i < 0) {
+			System.out.println("Vertices not found.");
+		}
+		
+		// TODO
+	}
+	
+	/**
+	 * Prints the graph.
+	 */
+	public void printGraph() {
+		for (int i = 0; i < vertices.size(); i++) {
 			System.out.print(vertices.get(i).name);
-			for(Neighbour nbr = vertices.get(i).adjList; nbr!=null ; nbr=nbr.nextNeighbour){
-				System.out.print("--> "+ vertices.get(nbr.vertext).name);
+			for (Neighbour nbr = vertices.get(i).adjList; nbr != null; nbr = nbr.nextNeighbour) {
+				System.out.print(" --> "+ vertices.get(nbr.vertext).name);
 			}
 			System.out.println("\n");
-			
 		}
 	}
 	
-	public static void main(String[] args) throws IOException{
+	public static void main(String[] args) throws IOException {
+		Graph graph;
+		try {
+			graph = new Graph("hyponymy.txt");
+		} catch (FileNotFoundException e) {
+			graph = new Graph();
+		}
+		 
+		//graph.printGraph();
+		 
+		//graph.mostDiverse();
+		 
+		/*graph.cite(3, "vertebrates", 1);
+		System.out.print("\n");
+		graph.cite(4, "vertebrates", 2);
+		System.out.print("\n");
+		graph.cite(11, "carnivore", 2);
+		System.out.print("\n");
+		graph.cite(15, "pet", 3);*/
 		
-		//Scanner sc =  new Scanner(System.in);
-		 //System.out.print("Enter graph input file name: ");
-		 String fileName = "hyponymy.txt";
-		 Graph  graph = new Graph(fileName);
-		 graph.printGraph();
+		//graph.citeAll("vertebrates", 2);
 	}
 }
