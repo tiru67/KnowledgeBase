@@ -243,7 +243,7 @@ class Graph {
 	 * 		
 	 * for each vertex x in vertices
 	 * 		if x=s1 //finding s1 source
-	 * BFS(G,x)
+	 * BFS(G,x,w)
 	 * x.color = GRAY
 	 * x.parent = NIL
 	 * Q=None;
@@ -253,16 +253,26 @@ class Graph {
 	 *          if u.color != GRAY
 	 *             	u.parent = x
 	 *          	u.color = GRAY;
-	 * 				if u = s2 //found one of s2/s3
-	 * 			       if BFS(G,x,s3) =true
-	 * 					  u is the common ancestor
-	 *              if u = s3 //found one of s2/s3
-	 * 			       if BFS(G,x,s2) = true
-	 * 					  u is the common ancestor.
+	 *              if u =w
+	 *              	return true;
 	 * 				Enqueue(Q,u)
 	 *         x.color = black //fully explored.
-	 *         
-	 *             
+	 * return false;
+	 * 
+	 *     
+	 *for each vertex x in vertices
+	 *		if x=s2
+	 *			recursiveFinder(x)    
+	 *				k = x.parent
+	 *     			while(k != s1)
+	 *      			if BFS(G,k,s3) = true
+	 *      				print x.parent is the lowest common ancestor
+	 *          		else // reached route
+	 *          			recursiveFinder(k.parent) 	
+	 *          print there is no common ancestor.	
+	 * 			   
+	 *      		
+	 *			
 	 * 			
 	 * 
 	 */
