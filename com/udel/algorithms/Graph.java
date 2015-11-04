@@ -224,6 +224,47 @@ class Graph {
 	 * @param species1 Starting point
 	 * @param species2
 	 * @param species3
+	 * 
+	 * IDEA:
+	 * find the shortest path to one of s2/s3
+	 * traverse back from the s2/s3 to source s1 and from every ancestor try finding the path to s2/s3 if exists
+	 * if exists then that is the lowest common ancestor.
+	 * 
+	 * Algorithm:
+	 * s1 is the source. 
+	 * if s1=s2
+	 * 		return -1 //no such ancestor 
+	 * if s1=s3
+	 * 		return -1 //no such ancestor
+	 * 
+	 * for each vertex k of vertices  //initialize all the vertices
+	 * 		k.color = WHITE
+	 * 		k.parent = NIL
+	 * 		
+	 * for each vertex x in vertices
+	 * 		if x=s1 //finding s1 source
+	 * BFS(G,x)
+	 * x.color = GRAY
+	 * x.parent = NIL
+	 * Q=None;
+	 * Enqueue(Q,x)
+	 * while Q !=None
+	 *        for each u in Adj[x] //visit all the children of u
+	 *          if u.color != GRAY
+	 *             	u.parent = x
+	 *          	u.color = GRAY;
+	 * 				if u = s2 //found one of s2/s3
+	 * 			       if BFS(G,x,s3) =true
+	 * 					  u is the common ancestor
+	 *              if u = s3 //found one of s2/s3
+	 * 			       if BFS(G,x,s2) = true
+	 * 					  u is the common ancestor.
+	 * 				Enqueue(Q,u)
+	 *         x.color = black //fully explored.
+	 *         
+	 *             
+	 * 			
+	 * 
 	 */
 	public void lowestCommonAncestor(String species1, String species2, String species3) {
 		int v1i = this.findVertexIndexByName(species1);
@@ -253,6 +294,7 @@ class Graph {
 		Graph graph;
 		try {
 			graph = new Graph("hyponymy.txt");
+			graph.printGraph();
 		} catch (FileNotFoundException e) {
 			graph = new Graph();
 		}
