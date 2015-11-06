@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
 
 class Neighbour {
@@ -20,9 +22,43 @@ class Neighbour {
 class Vertex {
 	public String name;
 	public Neighbour adjList;
+	public Vertex parent;
+	public String color;
+	public boolean ignore;
+	public boolean isIgnore() {
+		return ignore;
+	}
+	public void setIgnore(boolean ignore) {
+		this.ignore = ignore;
+	}
 	public Vertex(String name, Neighbour adjList) {
 		this.name = name;
 		this.adjList = adjList;
+		this.ignore=false;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public Neighbour getAdjList() {
+		return adjList;
+	}
+	public void setAdjList(Neighbour adjList) {
+		this.adjList = adjList;
+	}
+	public Vertex getParent() {
+		return parent;
+	}
+	public void setParent(Vertex parent) {
+		this.parent = parent;
+	}
+	public String getColor() {
+		return color;
+	}
+	public void setColor(String color) {
+		this.color = color;
 	}
 }
 
@@ -237,13 +273,15 @@ class Graph {
 	 * if s1=s3
 	 * 		return -1 //no such ancestor
 	 * 
-	 * for each vertex k of vertices  //initialize all the vertices
-	 * 		k.color = WHITE
-	 * 		k.parent = NIL
 	 * 		
 	 * for each vertex x in vertices
 	 * 		if x=s1 //finding s1 source
 	 * BFS(G,x,w)
+	 * 	  
+	 * for each vertex k of vertices  //initialize all the vertices
+	 * 		k.color = WHITE
+	 * 		k.parent = NIL
+	 * 
 	 * x.color = GRAY
 	 * x.parent = NIL
 	 * Q=None;
@@ -255,8 +293,9 @@ class Graph {
 	 *          	u.color = GRAY;
 	 *              if u =w
 	 *              	return true;
-	 * 				Enqueue(Q,u)
-	 *         x.color = black //fully explored.
+	 *              else
+	 * 					Enqueue(Q,u)
+	 *          x.color = black //fully explored.
 	 * return false;
 	 * 
 	 *     
@@ -265,28 +304,112 @@ class Graph {
 	 *			recursiveFinder(x)    
 	 *				k = x.parent
 	 *     			while(k != s1)
-	 *      			if BFS(G,k,s3) = true
+	 *         			//remove edges k-x & k-k.parent do Bfs with remaining edges.
+	 *      			if BFS(G,k,s3) = true 
 	 *      				print x.parent is the lowest common ancestor
+	 *      				return
 	 *          		else // reached route
+	 *          			add the edges k-x & k-k.parent back continues search.
 	 *          			recursiveFinder(k.parent) 	
-	 *          print there is no common ancestor.	
+	 *              
+	 *              print there is no common ancestor.
+	 *              return	
 	 * 			   
-	 *      		
-	 *			
-	 * 			
-	 * 
 	 */
-	public void lowestCommonAncestor(String species1, String species2, String species3) {
+	
+	
+	
+	public boolean BFS(Vertex s, Vertex w){
+		
+		Queue<Vertex> queue = new LinkedList<Vertex>();
+		initializeVertices();
+		s.setColor("GRAY");
+		queue.add(s);
+		
+		while(!queue.isEmpty()){
+			Vertex u = queue.poll();
+			for (Neighbour nbr = u.adjList; nbr != null; nbr = nbr.nextNeighbour) {
+				Vertex child = vertices.get(nbr.vertext);
+				if(!child.getColor().equalsIgnoreCase("GRAY") && !child.isIgnore()){
+					child.setColor("GRAY");
+					child.setParent(u);
+		
+					if(w!=null && child.getName().equalsIgnoreCase(w.getName())){ //when w is not provided it will explore the entire graph.
+						return true;
+					}else{
+						queue.add(u);
+					}
+				}
+			}
+			u.setColor("BLACK");
+		}
+		
+		return false;
+	}
+	
+	private void initializeVertices() {
+		
+		for (int i = 0; i < vertices.size(); i++) {
+			vertices.get(i).setColor("WHITE");
+			vertices.get(i).setParent(null);
+		}
+	}
+	
+
+	public int lowestCommonAncestor(String species1, String species2, String species3) {
 		int v1i = this.findVertexIndexByName(species1);
 		int v2i = this.findVertexIndexByName(species2);
 		int v3i = this.findVertexIndexByName(species3);
+		Vertex s1 = vertices.get(v1i);
+		Vertex s2 = vertices.get(v2i);
+		Vertex s3 = vertices.get(v2i);
 		if (v1i < 0 || v2i < 0 || v3i < 0) {
 			System.out.println("Vertices not found.");
+			return -1;
+		}else if(species1.equalsIgnoreCase(species2) || species1.equalsIgnoreCase(species3)){
+			System.out.println("No common ancestor starting from s1");
+			return -1;
+		}else{
+			BFS(s1,null); //explores the entire graph
+			Vertex k = s2.getParent();
+			getCommonAncestor(s1,s2,s3);
+			
 		}
+		return v3i;
+		
 		
 		// TODO
 	}
 	
+	private void getCommonAncestor(Vertex s1, Vertex s2, Vertex s3) {
+	
+		Vertex k = s2.getParent();
+		while(k!=null){
+			
+			//remove the edge connecting k-s2 and k-k.parent
+			
+			for (Neighbour nbr = k.adjList; nbr != null; nbr = nbr.nextNeighbour) {
+				int index = nbr.vertext;
+				if(index==vertices.indexOf(s2) || index==vertices.indexOf(k.getParent())){
+					vertices.get(index).setIgnore(true);
+				}
+			}
+			if(BFS(k,s3)){
+				System.out.printf("Common Ancestor: %s",k.getName());
+				break;
+			}else{
+				for (Neighbour nbr = k.adjList; nbr != null; nbr = nbr.nextNeighbour) {
+					int index = nbr.vertext;
+					vertices.get(index).setIgnore(false);
+				}
+				getCommonAncestor(s1, k.parent, s3);
+			}
+		
+		}
+		
+		System.out.println("No Common Ancestor Found");
+	}
+
 	/**
 	 * Prints the graph.
 	 */
@@ -304,7 +427,8 @@ class Graph {
 		Graph graph;
 		try {
 			graph = new Graph("hyponymy.txt");
-			graph.printGraph();
+			//graph.printGraph();
+			graph.lowestCommonAncestor("Entity","water","pot");
 		} catch (FileNotFoundException e) {
 			graph = new Graph();
 		}
