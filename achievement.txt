@@ -1,1 +1,3 @@
-We finished all the project's tasks. Since we have done using Java and the next project must be done using C++, we will need to "translate" to such language.
+1. We finished all the project's tasks. Since we have done using Java and the next project must be done using C++, we will need to find a way to invoke these java functions from a C/C++ program.
+
+
