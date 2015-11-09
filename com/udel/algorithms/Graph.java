@@ -194,14 +194,15 @@ class Graph {
 	 * @param species
 	 * @param order
 	 */
-	public void cite(int number, String species, int order) {
+	public ArrayList<Vertex> cite(int number, String species, int order) {
 		int index = this.findVertexIndexByName(species);
 		if (index == -1) {
-			System.out.print("Species not found.");
-			return;
+			return null;
 		}
 		Vertex v = vertices.get(index);
-		this.cite(v, number, order-1);
+		ArrayList<Vertex> list =  new ArrayList<Vertex>();
+		this.cite(list, v, number, order-1);
+		return list;
 	}
 	
 	/**
@@ -209,14 +210,15 @@ class Graph {
 	 * @param species
 	 * @param order
 	 */
-	public void citeAll(String species, int order) {
+	public ArrayList<Vertex> citeAll(String species, int order) {
 		int index = this.findVertexIndexByName(species);
 		if (index == -1) {
-			System.out.print("Species not found.");
-			return;
+			return null;
 		}
+		ArrayList<Vertex> list =  new ArrayList<Vertex>();
 		Vertex v = vertices.get(index);
-		this.cite(v, -1, order-1);
+		this.cite(list, v, -1, order-1);
+		return list;
 	}
 	
 	/**
@@ -226,7 +228,7 @@ class Graph {
 	 * @param order
 	 * @return int Remaining number of subspecies to print.
 	 */
-	private int cite(Vertex v, int number, int order) {
+	private int cite(ArrayList<Vertex> list, Vertex v, int number, int order) {
 		if (number == 0) {
 			return number;
 		}
@@ -234,14 +236,14 @@ class Graph {
 			// Reached provided order => print
 			Neighbour nbr = v.getAdjList();
 			while (number != 0 && nbr != null) {
-				System.out.print(vertices.get(nbr.getVertext()).getName() + ", ");
+				list.add(vertices.get(nbr.getVertext()));
 				nbr = nbr.getNextNeighbor();
 				number--;
 			}
 		} else {
 			// Did not reach provided order => keep going
 			for (Neighbour nbr = v.getAdjList(); nbr != null; nbr = nbr.getNextNeighbor()) {
-				number = cite(vertices.get(nbr.getVertext()), number, order-1);
+				number = cite(list, vertices.get(nbr.getVertext()), number, order-1);
 			}
 		}
 		return number;
@@ -250,7 +252,7 @@ class Graph {
 	/**
 	 * Prints the most diverse species (the one that has more subspecies).
 	 */
-	public void mostDiverse() {
+	public Vertex mostDiverse() {
 		int max = -1;
 		Vertex v = null;
 		for (int i = 0; i < vertices.size(); i++) {
@@ -263,7 +265,7 @@ class Graph {
 				v = vertices.get(i);
 			}
 		}
-		System.out.println("Most diverse species: " + v.getName() + " with " + max + " subspecies.");
+		return v;
 	}
 
 	/**
@@ -272,20 +274,20 @@ class Graph {
 	 * @param species2
 	 * @param species3
 	 */
-	public void lowestCommonAncestor(String species1, String species2, String species3) {
+	public Vertex lowestCommonAncestor(String species1, String species2, String species3) {
 		int v1i = this.findVertexIndexByName(species1);
 		int v2i = this.findVertexIndexByName(species2);
 		int v3i = this.findVertexIndexByName(species3);
 		Vertex s1 = vertices.get(v1i);
 		Vertex s2 = vertices.get(v2i);
-		Vertex s3 = vertices.get(v2i);
+		Vertex s3 = vertices.get(v3i);
 		if (v1i < 0 || v2i < 0 || v3i < 0) {
-			System.out.println("Vertices not found.");
+			return null;
 		} else if (species1.equalsIgnoreCase(species2) || species1.equalsIgnoreCase(species3)) {
-			System.out.println("No common ancestor found starting from s1.");
+			return null;
 		} else {
 			BFS(s1, null); // explores the entire graph to set the parent attribute of the vertexes
-			getCommonAncestor(s1, s2, s3);
+			return getCommonAncestor(s1, s2, s3);
 		}
 	}
 	
@@ -295,22 +297,21 @@ class Graph {
 	 * @param s2
 	 * @param s3
 	 */
-	private void getCommonAncestor(Vertex s1, Vertex s2, Vertex s3) {
+	private Vertex getCommonAncestor(Vertex s1, Vertex s2, Vertex s3) {
 		// While s1 is not reached
-		while (s2.getName() != s1.getName()) {
+		if (s2.getName() != s1.getName()) {
 			Vertex k = s2.getParent(); // Parent of last vertex
 			s2.setIgnore(true); // Remove the edge connecting k-s2 (since we know s3 is not in its children)
 			if (BFS(k, s3)) {
 				// Found s3 in the children of k
-				System.out.println("Lowest Common Ancestor: " + k.getName());
-				return;
+				return k;
 			} else {
 				// Keep going
-				getCommonAncestor(s1, k, s3);
+				return getCommonAncestor(s1, k, s3);
 			}
+		} else {
+			return null;
 		}
-		
-		System.out.println("No Common Ancestor Found");
 	}
 	
 	/**
@@ -321,7 +322,7 @@ class Graph {
 	 */
 	public boolean BFS(Vertex s, Vertex w){
 		Queue<Vertex> queue = new LinkedList<Vertex>();
-		initializeVertices();
+		initializeVertices(w == null);
 		s.setColor("GRAY");
 		queue.add(s);
 		while (!queue.isEmpty()) {
@@ -346,12 +347,15 @@ class Graph {
 	
 	/**
 	 * Initializes vertices for BFS.
+	 * @param firstTime if it is the first time that the graph is being initialized
 	 */
-	private void initializeVertices() {
+	private void initializeVertices(boolean firstTime) {
 		for (int i = 0; i < vertices.size(); i++) {
 			vertices.get(i).setColor("WHITE");
-			vertices.get(i).setIgnore(false);
-			vertices.get(i).setParent(null);
+			if (firstTime) {
+				vertices.get(i).setIgnore(false);
+				vertices.get(i).setParent(null);
+			}
 		}
 	}
 
@@ -375,27 +379,49 @@ class Graph {
 		} catch (FileNotFoundException e) {
 			graph = new Graph();
 		}
+		
+		Vertex v;
+		ArrayList<Vertex> list;
 		 
 		//graph.printGraph();
 		 
-		graph.mostDiverse();
-		 
-		graph.cite(3, "vertebrates", 1);
+		v = graph.mostDiverse();
+		System.out.println("Most diverse: " + v.getName());
+		
+		list = graph.cite(3, "vertebrates", 1);
+		for (int i = 0; i < list.size(); i++) {
+			System.out.print(list.get(i).getName() + ", ");
+		}
 		System.out.print("\n");
-		graph.cite(4, "vertebrates", 2);
+		list = graph.cite(4, "vertebrates", 2);
+		for (int i = 0; i < list.size(); i++) {
+			System.out.print(list.get(i).getName() + ", ");
+		}
 		System.out.print("\n");
-		graph.cite(11, "carnivore", 2);
+		list = graph.cite(11, "carnivore", 2);
+		for (int i = 0; i < list.size(); i++) {
+			System.out.print(list.get(i).getName() + ", ");
+		}
 		System.out.print("\n");
-		graph.cite(15, "pet", 3);
+		list = graph.cite(15, "pet", 3);
+		for (int i = 0; i < list.size(); i++) {
+			System.out.print(list.get(i).getName() + ", ");
+		}
 		
 		System.out.print("\n");
 		
-		graph.citeAll("vertebrates", 2);
+		list = graph.citeAll("vertebrates", 2);
+		for (int i = 0; i < list.size(); i++) {
+			System.out.print(list.get(i).getName() + ", ");
+		}
 		
 		System.out.print("\n");
 		
-		graph.lowestCommonAncestor("animalia", "felidae", "canidae");
-		graph.lowestCommonAncestor("pet", "fish", "cat");
-		graph.lowestCommonAncestor("Entity", "water", "pot");
+		v = graph.lowestCommonAncestor("animalia", "felidae", "canidae");
+		System.out.println("Lowest common ancestor: " + v.getName());
+		v = graph.lowestCommonAncestor("pet", "fish", "cat");
+		System.out.println("Lowest common ancestor: " + v.getName());
+		v = graph.lowestCommonAncestor("Entity", "water", "pot");
+		System.out.println("Lowest common ancestor: " + v.getName());
 	}
 }
