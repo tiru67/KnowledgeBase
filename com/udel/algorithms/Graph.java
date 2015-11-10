@@ -189,10 +189,11 @@ class Graph {
 	}
 	
 	/**
-	 * Prints subspecies of a species of certain order.
+	 * Finds subspecies of a species of certain order.
 	 * @param number
 	 * @param species
 	 * @param order
+	 * @return ArrayList<Vertex>
 	 */
 	public ArrayList<Vertex> cite(int number, String species, int order) {
 		int index = this.findVertexIndexByName(species);
@@ -206,9 +207,10 @@ class Graph {
 	}
 	
 	/**
-	 * Prints all subspecies of a species of certain order.
+	 * Finds all subspecies of a species of certain order.
 	 * @param species
 	 * @param order
+	 * @return ArrayList<Vertex>
 	 */
 	public ArrayList<Vertex> citeAll(String species, int order) {
 		int index = this.findVertexIndexByName(species);
@@ -223,6 +225,7 @@ class Graph {
 	
 	/**
 	 * Recursive method for citing.
+	 * @param list
 	 * @param v
 	 * @param number
 	 * @param order
@@ -250,7 +253,8 @@ class Graph {
 	}
 	
 	/**
-	 * Prints the most diverse species (the one that has more subspecies).
+	 * Finds the most diverse species (the one that has more subspecies).
+	 * @return Vertex
 	 */
 	public Vertex mostDiverse() {
 		int max = -1;
@@ -273,6 +277,7 @@ class Graph {
 	 * @param species1
 	 * @param species2
 	 * @param species3
+	 * @return Vertex
 	 */
 	public Vertex lowestCommonAncestor(String species1, String species2, String species3) {
 		int v1i = this.findVertexIndexByName(species1);
@@ -296,6 +301,7 @@ class Graph {
 	 * @param s1
 	 * @param s2
 	 * @param s3
+	 * @return Vertex
 	 */
 	private Vertex getCommonAncestor(Vertex s1, Vertex s2, Vertex s3) {
 		// While s1 is not reached
@@ -388,40 +394,53 @@ class Graph {
 		v = graph.mostDiverse();
 		System.out.println("Most diverse: " + v.getName());
 		
+		System.out.print("\n");
+		
+		System.out.println("3 subspecies of vertebrates of order 1:");
 		list = graph.cite(3, "vertebrates", 1);
 		for (int i = 0; i < list.size(); i++) {
 			System.out.print(list.get(i).getName() + ", ");
 		}
-		System.out.print("\n");
+		
+		System.out.print("\n\n");
+		
+		System.out.println("4 subspecies of vertebrates of order 2:");
 		list = graph.cite(4, "vertebrates", 2);
 		for (int i = 0; i < list.size(); i++) {
 			System.out.print(list.get(i).getName() + ", ");
 		}
-		System.out.print("\n");
+		
+		System.out.print("\n\n");
+		
+		System.out.println("11 subspecies of carnivores of order 2:");
 		list = graph.cite(11, "carnivore", 2);
 		for (int i = 0; i < list.size(); i++) {
 			System.out.print(list.get(i).getName() + ", ");
 		}
-		System.out.print("\n");
+		
+		System.out.print("\n\n");
+		
+		System.out.println("15 subspecies of pet of order 3:");
 		list = graph.cite(15, "pet", 3);
 		for (int i = 0; i < list.size(); i++) {
 			System.out.print(list.get(i).getName() + ", ");
 		}
 		
-		System.out.print("\n");
+		System.out.print("\n\n");
 		
+		System.out.println("All subspecies of vertebrates of order 2:");
 		list = graph.citeAll("vertebrates", 2);
 		for (int i = 0; i < list.size(); i++) {
 			System.out.print(list.get(i).getName() + ", ");
 		}
 		
-		System.out.print("\n");
+		System.out.print("\n\n");
 		
 		v = graph.lowestCommonAncestor("animalia", "felidae", "canidae");
-		System.out.println("Lowest common ancestor: " + v.getName());
+		System.out.println("Lowest common ancestor of felidae and canidae from animalia: " + v.getName());
 		v = graph.lowestCommonAncestor("pet", "fish", "cat");
-		System.out.println("Lowest common ancestor: " + v.getName());
+		System.out.println("Lowest common ancestor of fish and cat from pet: " + v.getName());
 		v = graph.lowestCommonAncestor("Entity", "water", "pot");
-		System.out.println("Lowest common ancestor: " + v.getName());
+		System.out.println("Lowest common ancestor of water and pot from entity: " + v.getName());
 	}
 }
